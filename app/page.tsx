@@ -7,7 +7,7 @@ type Item = { id: string; name: string; description?: string; price: number; sec
 const items: Item[] = [
   { id: "f-carne", name: "Flauta de carne", description: "Crujiente, sabrosa y hecha con orgullo", price: 45, section: "flautas" },
   { id: "f-papa", name: "Flauta de papa", description: "Dorada al momento", price: 40, section: "flautas" },
-  { id: "soda", name: "Soda", price: 25, section: "flautas" },
+  { id: "soda", name: "Soda", price: 29, section: "flautas" },
   { id: "cueritos", name: "Cueritos", price: 10, section: "flautas" },
   { id: "guacamole", name: "Guacamole extra", price: 10, section: "flautas" },
   { id: "salsa", name: "Salsa extra", price: 10, section: "flautas" },
@@ -18,7 +18,7 @@ const items: Item[] = [
   { id: "kg-costilla", name: "1 kg de costilla", description: "Papa, cebolla, tortillas y salsas", price: 300, section: "asada" },
   { id: "medio-costilla", name: "½ kg de costilla", description: "Papa, cebolla, tortillas y salsa", price: 200, section: "asada" },
   { id: "plato-costilla", name: "Platillo individual de costilla", description: "250 g con papa, cebolla, tortillas y chiles", price: 120, section: "asada" },
-  { id: "coca", name: "Coca-Cola 2 litros", price: 25, section: "asada" },
+  { id: "soda-asada", name: "Soda", price: 29, section: "asada" },
 ];
 
 const money = (value: number) => `$${value.toLocaleString("es-MX")}`;
