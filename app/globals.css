@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root { --red:#981b16; --cream:#f4e7c9; --ink:#191713; --green:#7fa42b; --paper:#fffaf0; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; color:var(--ink); background:var(--paper); font-family:Arial, Helvetica, sans-serif; }
+button,a { font:inherit; }
+button { cursor:pointer; }
+.hero { min-height:720px; color:#fff8e8; position:relative; overflow:hidden; padding:28px max(6vw,24px) 80px; background:radial-gradient(circle at 78% 43%,#c74829 0 3%,transparent 24%),linear-gradient(120deg,rgba(0,0,0,.24),rgba(0,0,0,.65)),url('/brand/plato-flautas.png') 74% 46%/cover; }
+.hero:after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(17,10,7,.9) 0%,rgba(17,10,7,.7) 43%,rgba(17,10,7,.05) 75%); z-index:0; }
+nav,.hero-copy,.hero-card { position:relative; z-index:1; }
+nav { display:flex; justify-content:space-between; align-items:center; }
+.brand { color:inherit; text-decoration:none; display:inline-block; }
+.brand img { display:block; width:110px; height:110px; object-fit:contain; }
+.events-link { color:#fff; border-bottom:2px solid #e8ac36; text-decoration:none; font-weight:800; padding:8px 0; }
+.hero-copy { max-width:690px; margin-top:135px; }
+.eyebrow { text-transform:uppercase; letter-spacing:2.5px; font-size:12px; font-weight:900; color:#df9d30; margin:0 0 13px; }
+h1,h2,h3,p { margin-top:0; }
+h1 { font-size:clamp(56px,8vw,104px); letter-spacing:-6px; line-height:.86; margin-bottom:28px; text-transform:uppercase; font-weight:1000; }
+h1 em { color:#edb13d; font-style:normal; }
+.hero-copy>p:not(.eyebrow) { max-width:540px; font-size:18px; line-height:1.55; color:#eee2cf; }
+.primary { display:inline-block; border:0; border-radius:6px; background:#e4a12f; color:#1d160b; padding:16px 24px; text-decoration:none; font-weight:900; margin-top:14px; }
+.hero-card { position:absolute; right:7vw; bottom:55px; width:230px; padding:22px; background:#f2e4c2; color:#17120e; transform:rotate(-2deg); box-shadow:8px 9px 0 #811b17; }
+.hero-card span,.hero-card small { display:block; font-weight:900; }
+.hero-card span { color:#981b16; font-size:12px; letter-spacing:2px; }
+.hero-card strong { font-size:38px; text-transform:uppercase; }
+.hero-card small { border-top:2px solid #1f1c17; padding-top:9px; }
+.menu { padding:90px max(6vw,24px) 120px; max-width:1180px; margin:auto; }
+.section-heading h2,.events h2,.cart h2 { font-size:clamp(38px,5vw,66px); line-height:.95; letter-spacing:-3px; text-transform:uppercase; margin-bottom:34px; }
+.tabs { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.tabs button { text-align:left; border:2px solid #d6c9ae; background:#fffaf0; padding:19px 22px; font-size:24px; font-weight:1000; text-transform:uppercase; border-radius:7px; }
+.tabs button span { display:block; font-size:10px; letter-spacing:2px; color:#981b16; }
+.tabs button.active { color:#fff; background:#991f19; border-color:#991f19; }
+.tabs button.active span { color:#f5c255; }
+.tabs button.active.asada { background:#1d2516; border-color:#1d2516; }
+.tabs button.active.asada span { color:#a9cc4d; }
+.availability { margin:18px 0 28px; padding:15px 18px; background:#efe3ca; border-radius:5px; }
+.products { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.product { min-height:155px; display:flex; justify-content:space-between; gap:20px; align-items:center; padding:25px; border:1px solid #dfd4bd; background:#fff; border-radius:8px; box-shadow:0 4px 0 rgba(49,34,18,.07); }
+.product h3 { font-size:21px; margin-bottom:6px; }
+.product p { color:#6b6256; font-size:13px; line-height:1.45; margin-bottom:14px; max-width:310px; }
+.price { color:#981b16; font-size:20px; }
+.add { flex:0 0 auto; background:#201b15; color:#fff; border:0; border-radius:5px; padding:10px 13px; font-weight:800; }
+.stepper { display:flex; align-items:center; gap:11px; flex:0 0 auto; }
+.stepper button { border:1px solid #c8bca5; background:#fffaf0; width:34px; height:34px; border-radius:50%; font-size:21px; line-height:1; }
+.events { max-width:1080px; margin:0 auto 110px; padding:62px; display:flex; justify-content:space-between; align-items:end; gap:40px; color:#fff; background:linear-gradient(115deg,rgba(13,16,10,.95),rgba(28,46,15,.70)),url('/brand/plato-carne-asada.png') center 65%/cover; border-radius:10px; box-shadow:13px 14px 0 #759527; }
+.events>div { max-width:620px; }
+.events h2 { margin-bottom:18px; }
+.events p:not(.eyebrow) { line-height:1.6; color:#e5e7db; }
+.light { white-space:nowrap; }
+footer { background:#17130f; color:#eadfc8; padding:50px max(6vw,24px) 120px; display:flex; justify-content:space-between; gap:30px; line-height:1.6; }
+footer .brand img { width:130px; height:130px; }
+.cart-bar { position:fixed; z-index:10; left:50%; bottom:18px; transform:translateX(-50%); width:min(92%,620px); border:0; border-radius:8px; background:#981b16; color:#fff; padding:16px 19px; display:flex; justify-content:space-between; box-shadow:0 12px 35px rgba(0,0,0,.35); font-weight:900; }
+.cart-bar b { display:inline-grid; place-items:center; width:24px; height:24px; margin-right:9px; background:#f0b43d; color:#271b0e; border-radius:50%; }
+.overlay { position:fixed; z-index:20; inset:0; background:rgba(15,10,6,.67); display:flex; justify-content:flex-end; }
+.cart { background:#fffaf0; width:min(100%,520px); height:100%; padding:32px; overflow:auto; box-shadow:-15px 0 45px rgba(0,0,0,.25); }
+.cart-head { display:flex; justify-content:space-between; align-items:start; }
+.cart-head h2 { margin-bottom:20px; }
+.cart-head>button { border:0; background:transparent; font-size:36px; }
+.cart-line { display:flex; align-items:center; justify-content:space-between; gap:15px; border-bottom:1px solid #ddd0b7; padding:18px 0; }
+.cart-line small,.pickup small { display:block; margin-top:5px; color:#706658; }
+.pickup { display:flex; gap:12px; background:#efe4ce; padding:16px; margin:25px 0; border-radius:6px; }
+.total { display:flex; justify-content:space-between; align-items:center; font-size:19px; padding:17px 0; border-top:2px solid #201a14; }
+.total strong { font-size:31px; color:#981b16; }
+.whatsapp { width:100%; border:0; border-radius:6px; background:#217a3f; color:#fff; padding:17px; font-weight:900; }
+.fine { display:block; text-align:center; color:#756b5e; padding:13px 10px; line-height:1.4; }
+@media (max-width:700px) {
+  .hero { min-height:660px; background-position:65% 45%; }
+  .hero:after { background:linear-gradient(90deg,rgba(17,10,7,.92),rgba(17,10,7,.45)); }
+  .hero-copy { margin-top:120px; }
+  h1 { font-size:55px; letter-spacing:-4px; }
+  .hero-card { right:24px; bottom:28px; width:190px; padding:15px; }
+  .hero-card strong { font-size:30px; }
+  .products { grid-template-columns:1fr; }
+  .product { min-height:135px; padding:20px; }
+  .tabs button { font-size:17px; padding:15px; }
+  .events { margin:0 20px 85px; padding:38px 25px; display:block; }
+  footer { display:block; }
+  .cart { padding:25px 20px; }
+}
