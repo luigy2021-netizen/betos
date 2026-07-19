@@ -18,7 +18,7 @@ const items: Item[] = [
   { id: "kg-costilla", name: "1 kg de costilla", description: "Papa, cebolla, tortillas y salsas", price: 300, section: "asada" },
   { id: "medio-costilla", name: "½ kg de costilla", description: "Papa, cebolla, tortillas y salsa", price: 200, section: "asada" },
   { id: "plato-costilla", name: "Platillo individual de costilla", description: "250 g con papa, cebolla, tortillas y chiles", price: 120, section: "asada" },
-  { id: "coca", name: "Coca-Cola 2 litros", price: 20, section: "asada" },
+  { id: "coca", name: "Coca-Cola 2 litros", price: 25, section: "asada" },
 ];
 
 const money = (value: number) => `$${value.toLocaleString("es-MX")}`;
