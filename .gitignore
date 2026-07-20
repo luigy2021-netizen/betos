@@ -40,3 +40,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+.streamlit/secrets.toml
+*.json
+__pycache__/
+*.tar.gz
