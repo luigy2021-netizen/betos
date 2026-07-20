@@ -40,6 +40,7 @@ logo_b64 = image_b64("public/brand/betos-logo.png")
 flautas_b64 = image_b64("public/brand/plato-flautas.png")
 asada_b64 = image_b64("public/brand/plato-carne-asada.png")
 portada_b64 = image_b64("public/brand/portada-betos.png")
+kroniq_b64 = image_b64("public/brand/kroniq-logo.png")
 
 styles = """
 <style>
@@ -57,7 +58,8 @@ div[data-testid="stNumberInput"]{background:#fff;border-radius:10px;padding:.5re
 .events{margin-top:4rem;border-radius:16px;padding:3rem;color:white;background:linear-gradient(100deg,rgba(13,18,9,.93),rgba(26,43,14,.42)),url('data:image/png;base64,ASADA_BG') center 62%/cover}.events h2{font-size:3rem;max-width:600px;margin:.5rem 0 1rem}.events p{max-width:600px;line-height:1.6}
 .total-box{background:#201a14;color:white;border-radius:12px;padding:1.1rem 1.3rem;display:flex;justify-content:space-between;font-size:1.2rem;font-weight:900;margin:1rem 0}.total-box strong{color:#f1b43e;font-size:1.55rem}
 .wa-link a{display:block;text-align:center;background:#217a3f;color:#fff!important;text-decoration:none;padding:1rem;border-radius:9px;font-weight:900}
-@media(max-width:700px){.block-container{padding:1rem 1rem 5rem}.brandbar img{width:125px;height:125px}.pickup-chip{font-size:.72rem}.hero{min-height:520px;background-position:42% center}.hero-copy{width:72%;padding:2.2rem 1.3rem}.hero h1{font-size:3.25rem}.section-title h2,.events h2{font-size:2.4rem}.events{padding:2rem 1.3rem}}
+.kroniq-ad{margin-top:4rem;padding:1.5rem 1.7rem;border-radius:16px;background:#050817;display:grid;grid-template-columns:210px 1fr auto;gap:1.6rem;align-items:center;color:#fff;border:1px solid #232b50;box-shadow:0 18px 45px rgba(13,18,45,.16)}.kroniq-ad img{width:100%;max-height:115px;object-fit:contain}.kroniq-ad h3{margin:0 0 .35rem;font-size:1.65rem;text-transform:none}.kroniq-ad p{margin:0;color:#c9cde0;line-height:1.5}.kroniq-ad a{display:inline-block;padding:.85rem 1.05rem;border-radius:9px;background:linear-gradient(90deg,#793dff,#00aee8);color:#fff!important;text-decoration:none;font-weight:800;white-space:nowrap}
+@media(max-width:700px){.block-container{padding:1rem 1rem 5rem}.brandbar img{width:125px;height:125px}.pickup-chip{font-size:.72rem}.hero{min-height:520px;background-position:42% center}.hero-copy{width:72%;padding:2.2rem 1.3rem}.hero h1{font-size:3.25rem}.section-title h2,.events h2{font-size:2.4rem}.events{padding:2rem 1.3rem}.kroniq-ad{grid-template-columns:1fr;text-align:center}.kroniq-ad img{width:210px;margin:auto}.kroniq-ad a{white-space:normal}}
 </style>
 """
 st.markdown(styles.replace("FLAUTAS_BG", flautas_b64).replace("ASADA_BG", asada_b64).replace("PORTADA_BG", portada_b64), unsafe_allow_html=True)
@@ -142,3 +144,6 @@ if st.session_state.last_order:
 
 st.markdown("""<section class="events"><div class="eyebrow">Beto's va a tu evento</div><h2>El sabor que reúne a todos.</h2><p>¿Cumpleaños, reunión o evento especial? Cotizamos el servicio a domicilio según tus invitados y necesidades.</p></section>""", unsafe_allow_html=True)
 st.link_button("Cotizar evento por WhatsApp", "https://wa.me/526561614536?text=Hola%2C%20quiero%20cotizar%20un%20evento%20a%20domicilio%20con%20Beto%27s.", use_container_width=True)
+
+kroniq_url = "https://wa.me/526563079754?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20una%20agenda%20digital%20para%20mi%20negocio."
+st.markdown(f"""<section class="kroniq-ad"><img src="data:image/png;base64,{kroniq_b64}" alt="Kroniq Booking"><div><h3>¿Tienes un negocio? ¿Quieres una agenda como esta?</h3><p>Automatiza tus citas o pedidos con una solución digital profesional creada por Kroniq.</p></div><a href="{kroniq_url}" target="_blank" rel="noopener noreferrer">Quiero información</a></section>""", unsafe_allow_html=True)
