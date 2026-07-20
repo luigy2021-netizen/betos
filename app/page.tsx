@@ -27,14 +27,34 @@ export default function Home() {
   const [section, setSection] = useState<"flautas" | "asada">("flautas");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState("");
 
   const count = Object.values(cart).reduce((a, b) => a + b, 0);
   const total = useMemo(() => items.reduce((sum, item) => sum + (cart[item.id] || 0) * item.price, 0), [cart]);
   const change = (id: string, delta: number) => setCart(prev => ({ ...prev, [id]: Math.max(0, (prev[id] || 0) + delta) }));
-  const order = () => {
+  const order = async () => {
+    setOrderError("");
+    const digits = phone.replace(/\D/g, "");
+    if (name.trim().length < 2 || digits.length !== 10 || !pickupTime) {
+      setOrderError("Escribe tu nombre, teléfono de 10 dígitos y hora de recogida.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone: digits, pickupTime, notes, items: items.filter(i => cart[i.id]).map(i => ({ id: i.id, quantity: cart[i.id] })) }) });
+      const result = await response.json() as { folio?: string; total?: number; error?: string };
+      if (!response.ok || !result.folio) throw new Error(result.error || "No se pudo registrar el pedido.");
     const lines = items.filter(i => cart[i.id]).map(i => `• ${cart[i.id]} × ${i.name} — ${money(cart[i.id] * i.price)}`);
-    const message = ["¡Hola, Beto's! Quiero hacer este pedido para recoger:", "", ...lines, "", `TOTAL: ${money(total)}`, "Pago: efectivo al recoger", "Lugar: Calle Oaxaca 2537", "", "¿Me confirman el tiempo de preparación?"].join("\n");
+      const message = ["¡Hola, Beto's! Quiero confirmar este pedido para recoger:", `Folio: ${result.folio}`, `Nombre: ${name.trim()}`, `Teléfono: ${digits}`, `Hora de recogida: ${pickupTime}`, "", ...lines, "", `TOTAL: ${money(result.total ?? total)}`, "Pago: efectivo al recoger", "Lugar: Calle Oaxaca 2537", notes.trim() ? `Notas: ${notes.trim()}` : "", "", "¿Me confirman el pedido?"].filter(Boolean).join("\n");
     window.open(`https://wa.me/526561614536?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setOrderError(error instanceof Error ? error.message : "No se pudo registrar el pedido.");
+    } finally { setSubmitting(false); }
   };
 
   return (
@@ -80,8 +100,15 @@ export default function Home() {
         <div className="cart-head"><div><p className="eyebrow">Tu pedido</p><h2>Todo listo</h2></div><button onClick={() => setCartOpen(false)} aria-label="Cerrar">×</button></div>
         <div className="cart-lines">{items.filter(i => cart[i.id]).map(i => <div className="cart-line" key={i.id}><div><b>{i.name}</b><small>{money(i.price)} c/u</small></div><div className="stepper"><button onClick={() => change(i.id,-1)}>−</button><b>{cart[i.id]}</b><button onClick={() => change(i.id,1)}>+</button></div></div>)}</div>
         <div className="pickup"><span>📍</span><div><b>Recoge en Calle Oaxaca 2537</b><small>Pago en efectivo al recoger</small></div></div>
+        <div className="customer-fields">
+          <label>Nombre<input value={name} onChange={e => setName(e.target.value)} maxLength={80} placeholder="Tu nombre" /></label>
+          <label>Teléfono<input value={phone} onChange={e => setPhone(e.target.value)} inputMode="tel" maxLength={14} placeholder="10 dígitos" /></label>
+          <label>Hora para recoger<input value={pickupTime} onChange={e => setPickupTime(e.target.value)} type="time" min="14:00" max="21:00" /></label>
+          <label>Notas (opcional)<textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={300} placeholder="Ej. sin salsa, bien doradas…" /></label>
+        </div>
+        {orderError && <p className="order-error" role="alert">{orderError}</p>}
         <div className="total"><span>Total a pagar</span><strong>{money(total)}</strong></div>
-        <button className="whatsapp" onClick={order}>Confirmar por WhatsApp</button><small className="fine">Tu pedido se confirma cuando Beto's responda por WhatsApp.</small>
+        <button className="whatsapp" onClick={order} disabled={submitting}>{submitting ? "Registrando pedido…" : "Registrar y confirmar por WhatsApp"}</button><small className="fine">Tu pedido se registra con un folio y se confirma cuando Beto's responda por WhatsApp.</small>
       </aside></div>}
     </main>
   );
