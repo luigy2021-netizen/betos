@@ -31,7 +31,16 @@ PRODUCTS = {
     ],
 }
 
-st.markdown("""
+def image_b64(path: str) -> str:
+    with open(path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
+
+logo_b64 = image_b64("public/brand/betos-logo.png")
+flautas_b64 = image_b64("public/brand/plato-flautas.png")
+asada_b64 = image_b64("public/brand/plato-carne-asada.png")
+
+styles = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=Oswald:wght@500;600;700&display=swap');
 :root{--red:#981b16;--gold:#e7a833;--cream:#fff7e7;--ink:#1b1712}.stApp{background:#fffaf0;color:var(--ink)}
@@ -39,17 +48,18 @@ st.markdown("""
 h1,h2,h3{font-family:'Oswald',sans-serif!important;text-transform:uppercase}p,div,label,input,textarea,button{font-family:'DM Sans',sans-serif}
 .brandbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}.brandbar img{width:160px;height:160px;object-fit:contain}
 .pickup-chip{padding:.65rem 1rem;border:1px solid #d9c9aa;border-radius:999px;font-weight:800;background:#fff}
-.hero{min-height:430px;border-radius:18px;padding:3.2rem;display:flex;align-items:center;position:relative;overflow:hidden;background:linear-gradient(90deg,rgba(20,14,9,.94) 0%,rgba(20,14,9,.74) 42%,rgba(20,14,9,.05) 78%),url('app/static/plato-flautas.png') center/cover}
-.hero-copy{max-width:620px;color:#fff8e8;position:relative}.eyebrow{color:var(--gold);font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.hero{min-height:430px;border-radius:18px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);overflow:hidden;background:#201a14}
+.hero-copy{padding:3.2rem;display:flex;flex-direction:column;justify-content:center;color:#fff8e8}.hero-logo{display:flex;align-items:center;justify-content:center;padding:2.2rem;background:#f4ead8}.hero-logo img{width:min(330px,90%);max-height:360px;object-fit:contain;filter:drop-shadow(0 14px 18px rgba(42,25,10,.20))}.eyebrow{color:var(--gold);font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
 .hero h1{font-size:clamp(3.2rem,7vw,6.2rem);line-height:.88;margin:.6rem 0 1.3rem;letter-spacing:-.03em}.hero h1 span{color:var(--gold)}.hero p{font-size:1.05rem;line-height:1.6;max-width:520px;color:#efe3ce}
 .section-title{margin:4.5rem 0 1rem}.section-title h2{font-size:3rem;margin:.2rem 0}.schedule{background:#efe3ca;border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem}
 div[data-testid="stNumberInput"]{background:#fff;border-radius:10px;padding:.5rem .8rem;border:1px solid #e1d4bc}div[data-testid="stForm"]{background:#fff;border:1px solid #dfd1b8;border-radius:16px;padding:1.4rem}
-.events{margin-top:4rem;border-radius:16px;padding:3rem;color:white;background:linear-gradient(100deg,rgba(13,18,9,.93),rgba(26,43,14,.5)),url('app/static/plato-carne-asada.png') center 62%/cover}.events h2{font-size:3rem;max-width:600px;margin:.5rem 0 1rem}.events p{max-width:600px;line-height:1.6}
+.events{margin-top:4rem;border-radius:16px;padding:3rem;color:white;background:linear-gradient(100deg,rgba(13,18,9,.93),rgba(26,43,14,.42)),url('data:image/png;base64,ASADA_BG') center 62%/cover}.events h2{font-size:3rem;max-width:600px;margin:.5rem 0 1rem}.events p{max-width:600px;line-height:1.6}
 .total-box{background:#201a14;color:white;border-radius:12px;padding:1.1rem 1.3rem;display:flex;justify-content:space-between;font-size:1.2rem;font-weight:900;margin:1rem 0}.total-box strong{color:#f1b43e;font-size:1.55rem}
 .wa-link a{display:block;text-align:center;background:#217a3f;color:#fff!important;text-decoration:none;padding:1rem;border-radius:9px;font-weight:900}
-@media(max-width:700px){.block-container{padding:1rem 1rem 5rem}.brandbar img{width:125px;height:125px}.pickup-chip{font-size:.72rem}.hero{min-height:520px;padding:2rem 1.3rem;background-position:63% center}.hero h1{font-size:3.6rem}.section-title h2,.events h2{font-size:2.4rem}.events{padding:2rem 1.3rem}}
+@media(max-width:700px){.block-container{padding:1rem 1rem 5rem}.brandbar img{width:125px;height:125px}.pickup-chip{font-size:.72rem}.hero{grid-template-columns:1fr}.hero-copy{padding:2.2rem 1.3rem}.hero-logo{padding:1.5rem;min-height:260px}.hero-logo img{width:min(260px,80%)}.hero h1{font-size:3.6rem}.section-title h2,.events h2{font-size:2.4rem}.events{padding:2rem 1.3rem}}
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(styles.replace("FLAUTAS_BG", flautas_b64).replace("ASADA_BG", asada_b64), unsafe_allow_html=True)
 
 @st.cache_resource
 def get_sheet():
@@ -65,11 +75,8 @@ def safe_cell(value: str) -> str:
     text = str(value or "").strip()
     return "'" + text if text.startswith(("=", "+", "-", "@")) else text
 
-with open("public/brand/betos-logo.png", "rb") as logo_file:
-    logo_b64 = base64.b64encode(logo_file.read()).decode()
-
 st.markdown(f'<div class="brandbar"><img src="data:image/png;base64,{logo_b64}" alt="Beto\'s"><div class="pickup-chip">📍 Oaxaca 2537 · Recoge en local</div></div>', unsafe_allow_html=True)
-st.markdown("""<section class="hero"><div class="hero-copy"><div class="eyebrow">Sabor casero · Fuego y tradición</div><h1>Tu antojo,<br><span>listo para recoger.</span></h1><p>Elige tus favoritos, revisa el total y confirma tu pedido por WhatsApp. Pagas en efectivo al recoger.</p></div></section><div class="section-title"><div class="eyebrow">Ordena a tu gusto</div><h2>¿Qué se te antoja?</h2></div>""", unsafe_allow_html=True)
+st.markdown(f"""<section class="hero"><div class="hero-copy"><div class="eyebrow">Sabor casero · Fuego y tradición</div><h1>Tu antojo,<br><span>listo para recoger.</span></h1><p>Elige tus favoritos, revisa el total y confirma tu pedido por WhatsApp. Pagas en efectivo al recoger.</p></div><div class="hero-logo"><img src="data:image/png;base64,{logo_b64}" alt="Logo de Beto's"></div></section><div class="section-title"><div class="eyebrow">Ordena a tu gusto</div><h2>¿Qué se te antoja?</h2></div>""", unsafe_allow_html=True)
 st.markdown('<div class="schedule"><b>Flautas:</b> jueves a domingo · 2–9 PM &nbsp; | &nbsp; <b>Carne asada:</b> sábado y domingo · 2–9 PM</div>', unsafe_allow_html=True)
 
 if "last_order" not in st.session_state:
@@ -134,4 +141,3 @@ if st.session_state.last_order:
 
 st.markdown("""<section class="events"><div class="eyebrow">Beto's va a tu evento</div><h2>El sabor que reúne a todos.</h2><p>¿Cumpleaños, reunión o evento especial? Cotizamos el servicio a domicilio según tus invitados y necesidades.</p></section>""", unsafe_allow_html=True)
 st.link_button("Cotizar evento por WhatsApp", "https://wa.me/526561614536?text=Hola%2C%20quiero%20cotizar%20un%20evento%20a%20domicilio%20con%20Beto%27s.", use_container_width=True)
-
