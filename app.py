@@ -1,797 +1,144 @@
-import base64
-import json
-import mimetypes
-import re
-from datetime import date, datetime, time, timedelta
-from html import escape
-from pathlib import Path
-from urllib.parse import quote_plus
+from __future__ import annotations
 
+from datetime import datetime, time
+from urllib.parse import quote
+from zoneinfo import ZoneInfo
+
+import base64
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
 
+st.set_page_config(page_title="Beto's | Flautas & Asada", page_icon="🌮", layout="wide", initial_sidebar_state="collapsed")
 
-st.set_page_config(
-    page_title="Europa Spa",
-    page_icon="E",
-    layout="centered",
-    initial_sidebar_state="collapsed",
-)
-
-
-SHEET_ID = "1erDwwIzWkQzkEpL8RgqvXQ0dqgowSNg1PYZmlf8Yj24"
-ADMIN_PASSWORD_DEFAULT = "1234"
-
-NEGOCIO = {
-    "nombre": "Europa Spa",
-    "categoria": "Spa premium para caballeros",
-    "telefono": "6567059823",
-    "horario": "Lunes a sabado, 10:00 am a 10:00 pm",
-    "precio": "Desde $750. Precio final en lugar.",
+TZ = ZoneInfo("America/Ojinaga")
+HEADERS = ["Fecha y hora", "Folio", "Nombre del cliente", "Teléfono", "Pedido", "Total", "Fecha de recogida", "Hora de recogida", "Notas", "Forma de pago", "Estado"]
+PRODUCTS = {
+    "Flautas": [
+        ("Flauta de carne", 45, "Crujiente, sabrosa y hecha con orgullo"),
+        ("Flauta de papa", 40, "Dorada al momento"),
+        ("Soda", 29, ""), ("Cueritos", 10, ""), ("Guacamole extra", 10, ""),
+        ("Salsa extra", 10, ""), ("Crema extra", 10, ""),
+    ],
+    "Carne asada": [
+        ("1 kg de carne asada", 400, "Papa, cebolla, tortillas y chiles toreados"),
+        ("½ kg de carne asada", 250, "Papa, cebolla, tortillas y chiles toreados"),
+        ("Platillo individual", 150, "250 g de carne, papa, cebolla, tortillas y chiles"),
+        ("1 kg de costilla", 300, "Papa, cebolla, tortillas y salsas"),
+        ("½ kg de costilla", 200, "Papa, cebolla, tortillas y salsa"),
+        ("Platillo individual de costilla", 120, "250 g con papa, cebolla, tortillas y chiles"),
+        ("Soda", 29, ""),
+    ],
 }
 
-SERVICIOS = {
-    "Masaje relajante": {
-        "duracion": 60,
-        "precio": "Desde $750",
-        "descripcion": "Sesion enfocada en descanso, suavidad y bienestar general.",
-    },
-    "Masaje descontracturante": {
-        "duracion": 90,
-        "precio": "Desde $750",
-        "descripcion": "Sesion profunda para liberar tension muscular acumulada.",
-    },
-    "Aromaterapia": {
-        "duracion": 90,
-        "precio": "Desde $750",
-        "descripcion": "Masaje con aromas relajantes y ambiente sensorial premium.",
-    },
-}
-
-HORARIO_GENERAL = {
-    "lunes": ("10:00", "22:00"),
-    "martes": ("10:00", "22:00"),
-    "miercoles": ("10:00", "22:00"),
-    "jueves": ("10:00", "22:00"),
-    "viernes": ("10:00", "22:00"),
-    "sabado": ("10:00", "22:00"),
-}
-
-TERAPEUTAS = [
-    {
-        "id": "terapeuta-1",
-        "nombre": "Terapeuta 1",
-        "foto": "static/terapeutas/terapeuta-1.jpg",
-        "especialidades": ["Relajante", "Aromaterapia"],
-        "servicios": ["Masaje relajante", "Aromaterapia"],
-        "horario": HORARIO_GENERAL,
-    },
-    {
-        "id": "terapeuta-2",
-        "nombre": "Terapeuta 2",
-        "foto": "static/terapeutas/terapeuta-2.jpg",
-        "especialidades": ["Descontracturante", "Presion media"],
-        "servicios": ["Masaje relajante", "Masaje descontracturante"],
-        "horario": HORARIO_GENERAL,
-    },
-    {
-        "id": "terapeuta-3",
-        "nombre": "Terapeuta 3",
-        "foto": "static/terapeutas/terapeuta-3.jpg",
-        "especialidades": ["Relajante", "Sesion extendida"],
-        "servicios": ["Masaje relajante", "Masaje descontracturante", "Aromaterapia"],
-        "horario": HORARIO_GENERAL,
-    },
-    {
-        "id": "terapeuta-4",
-        "nombre": "Terapeuta 4",
-        "foto": "static/terapeutas/terapeuta-4.jpg",
-        "especialidades": ["Aromaterapia", "Relajante premium"],
-        "servicios": ["Masaje relajante", "Aromaterapia"],
-        "horario": HORARIO_GENERAL,
-    },
-    {
-        "id": "terapeuta-5",
-        "nombre": "Terapeuta 5",
-        "foto": "static/terapeutas/terapeuta-5.jpg",
-        "especialidades": ["Descontracturante", "Sesion profunda"],
-        "servicios": ["Masaje descontracturante", "Aromaterapia"],
-        "horario": HORARIO_GENERAL,
-    },
-]
-
-DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
-MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
-BUFFER_MINUTOS = 15
-PASO_MINUTOS = 30
-
-COLUMNAS = [
-    "id",
-    "negocio",
-    "terapeuta_id",
-    "terapeuta",
-    "cliente",
-    "whatsapp",
-    "servicio",
-    "duracion",
-    "fecha",
-    "hora",
-    "estatus",
-    "comentarios",
-    "creado_en",
-]
+def image_b64(path: str) -> str:
+    with open(path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
 
 
-def inject_css():
-    st.markdown(
-        """
-        <style>
-            #MainMenu, footer, header,
-            [data-testid="stToolbar"],
-            [data-testid="stDecoration"],
-            [data-testid="stStatusWidget"],
-            [data-testid="stHeader"],
-            .stDeployButton {
-                display: none !important;
-            }
+logo_b64 = image_b64("public/brand/betos-logo.png")
+flautas_b64 = image_b64("public/brand/plato-flautas.png")
+asada_b64 = image_b64("public/brand/plato-carne-asada.png")
+portada_b64 = image_b64("public/brand/portada-betos.png")
 
-            :root {
-                --bg: #08090b;
-                --panel: rgba(18, 20, 25, .78);
-                --panel-strong: #141821;
-                --line: rgba(255,255,255,.11);
-                --text: #f8fafc;
-                --soft: rgba(248,250,252,.68);
-                --gold: #c8a96a;
-                --gold-2: #f1d99b;
-                --rose: #d85c74;
-                --blue: #7dd3fc;
-            }
+styles = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=Oswald:wght@500;600;700&display=swap');
+:root{--red:#981b16;--gold:#e7a833;--cream:#fff7e7;--ink:#1b1712}.stApp{background:#fffaf0;color:var(--ink)}
+.block-container{max-width:1120px;padding-top:1.2rem;padding-bottom:6rem}[data-testid="stHeader"]{background:transparent}
+h1,h2,h3{font-family:'Oswald',sans-serif!important;text-transform:uppercase}p,div,label,input,textarea,button{font-family:'DM Sans',sans-serif}
+.brandbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}.brandbar img{width:160px;height:160px;object-fit:contain}
+.pickup-chip{padding:.65rem 1rem;border:1px solid #d9c9aa;border-radius:999px;font-weight:800;background:#fff}
+.hero{min-height:520px;border-radius:18px;display:flex;align-items:center;overflow:hidden;background-image:url('data:image/png;base64,PORTADA_BG');background-position:center;background-size:cover;background-repeat:no-repeat}
+.hero-copy{width:58%;padding:3.2rem;display:flex;flex-direction:column;justify-content:center;color:#fff8e8}.eyebrow{color:var(--gold);font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.hero h1{font-size:clamp(3.2rem,7vw,6.2rem);line-height:.88;margin:.6rem 0 1.3rem;letter-spacing:-.03em}.hero h1 span{color:var(--gold)}.hero p{font-size:1.05rem;line-height:1.6;max-width:520px;color:#efe3ce}
+.section-title{margin:4.5rem 0 1rem}.section-title h2{font-size:3rem;margin:.2rem 0}.schedule{background:#efe3ca;border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem}
+div[data-testid="stNumberInput"]{background:#fff;border-radius:10px;padding:.5rem .8rem;border:1px solid #e1d4bc}div[data-testid="stForm"]{background:#fff;border:1px solid #dfd1b8;border-radius:16px;padding:1.4rem}
+.events{margin-top:4rem;border-radius:16px;padding:3rem;color:white;background:linear-gradient(100deg,rgba(13,18,9,.93),rgba(26,43,14,.42)),url('data:image/png;base64,ASADA_BG') center 62%/cover}.events h2{font-size:3rem;max-width:600px;margin:.5rem 0 1rem}.events p{max-width:600px;line-height:1.6}
+.total-box{background:#201a14;color:white;border-radius:12px;padding:1.1rem 1.3rem;display:flex;justify-content:space-between;font-size:1.2rem;font-weight:900;margin:1rem 0}.total-box strong{color:#f1b43e;font-size:1.55rem}
+.wa-link a{display:block;text-align:center;background:#217a3f;color:#fff!important;text-decoration:none;padding:1rem;border-radius:9px;font-weight:900}
+@media(max-width:700px){.block-container{padding:1rem 1rem 5rem}.brandbar img{width:125px;height:125px}.pickup-chip{font-size:.72rem}.hero{min-height:520px;background-position:42% center}.hero-copy{width:72%;padding:2.2rem 1.3rem}.hero h1{font-size:3.25rem}.section-title h2,.events h2{font-size:2.4rem}.events{padding:2rem 1.3rem}}
+</style>
+"""
+st.markdown(styles.replace("FLAUTAS_BG", flautas_b64).replace("ASADA_BG", asada_b64).replace("PORTADA_BG", portada_b64), unsafe_allow_html=True)
 
-            html, body, [data-testid="stAppViewContainer"] {
-                background:
-                    linear-gradient(145deg, rgba(200,169,106,.13), transparent 34rem),
-                    radial-gradient(circle at bottom right, rgba(125,211,252,.09), transparent 30rem),
-                    var(--bg);
-                color: var(--text);
-            }
-
-            [data-testid="stAppViewBlockContainer"] {
-                max-width: 860px;
-                padding: 1.15rem 1rem 4.5rem;
-            }
-
-            h1, h2, h3, p, label, span {
-                letter-spacing: 0;
-            }
-
-            h1 {
-                font-size: 2.35rem !important;
-                line-height: 1.03 !important;
-                margin-bottom: .4rem !important;
-            }
-
-            h2 {
-                font-size: 1.28rem !important;
-                margin: .35rem 0 .85rem !important;
-            }
-
-            .eu-hero, .eu-section {
-                border: 1px solid var(--line);
-                border-radius: 8px;
-                background: linear-gradient(145deg, rgba(20,24,33,.94), rgba(12,14,18,.94));
-                box-shadow: 0 22px 70px rgba(0,0,0,.38);
-            }
-
-            .eu-hero {
-                padding: 1.15rem;
-                margin-bottom: 1rem;
-            }
-
-            .eu-section {
-                padding: 1rem;
-                margin: 1rem 0;
-            }
-
-            .eu-mark {
-                display: inline-flex;
-                width: 3rem;
-                height: 3rem;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                background: linear-gradient(135deg, var(--gold), var(--gold-2));
-                color: #08090b;
-                font-weight: 900;
-                margin-bottom: .9rem;
-                box-shadow: 0 14px 34px rgba(200,169,106,.22);
-            }
-
-            .eu-eyebrow {
-                color: var(--gold-2);
-                font-size: .76rem;
-                font-weight: 800;
-                text-transform: uppercase;
-                margin-bottom: .5rem;
-            }
-
-            .eu-copy, .eu-muted {
-                color: var(--soft);
-                line-height: 1.5;
-                font-size: .96rem;
-            }
-
-            .eu-grid {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: .75rem;
-                margin-top: .7rem;
-            }
-
-            .eu-card {
-                border: 1px solid var(--line);
-                border-radius: 8px;
-                background: linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.025));
-                overflow: hidden;
-            }
-
-            .eu-card-body {
-                padding: .85rem;
-            }
-
-            .eu-card-title {
-                color: #fff7ed;
-                font-size: 1rem;
-                font-weight: 900;
-                margin-bottom: .35rem;
-            }
-
-            .eu-card-meta {
-                color: var(--gold-2);
-                font-size: .83rem;
-                font-weight: 800;
-                margin-bottom: .45rem;
-            }
-
-            .eu-photo, .eu-placeholder {
-                width: 100%;
-                aspect-ratio: 4 / 3;
-                display: block;
-            }
-
-            .eu-photo {
-                object-fit: cover;
-            }
-
-            .eu-placeholder {
-                display: grid;
-                place-items: center;
-                background: linear-gradient(135deg, #f1d99b, #7dd3fc);
-                color: #08090b;
-                font-size: 2.35rem;
-                font-weight: 900;
-            }
-
-            .eu-slots {
-                display: flex;
-                flex-wrap: wrap;
-                gap: .35rem;
-                margin-top: .65rem;
-            }
-
-            .eu-slot {
-                border: 1px solid rgba(200,169,106,.36);
-                border-radius: 999px;
-                color: #fff7ed;
-                background: rgba(200,169,106,.12);
-                padding: .25rem .5rem;
-                font-size: .75rem;
-                font-weight: 800;
-            }
-
-            .eu-summary, .eu-success {
-                border-radius: 8px;
-                padding: .9rem;
-                margin: .8rem 0;
-            }
-
-            .eu-summary {
-                border: 1px solid rgba(200,169,106,.35);
-                background: rgba(200,169,106,.09);
-                color: #fff7ed;
-            }
-
-            .eu-success {
-                border: 1px solid rgba(34,197,94,.36);
-                background: rgba(34,197,94,.13);
-                color: #dcfce7;
-            }
-
-            .eu-admin-row {
-                border-bottom: 1px solid var(--line);
-                padding: .75rem 0;
-            }
-
-            .stTextInput input,
-            .stTextArea textarea,
-            .stSelectbox div[data-baseweb="select"] > div,
-            .stDateInput input {
-                border-radius: 8px !important;
-                border: 1px solid rgba(148,163,184,.24) !important;
-                background-color: #151821 !important;
-                color: #f8fafc !important;
-                min-height: 3rem;
-                box-shadow: none !important;
-            }
-
-            .stTextInput label,
-            .stTextArea label,
-            .stSelectbox label,
-            .stDateInput label {
-                color: rgba(255,255,255,.84) !important;
-                font-weight: 750 !important;
-            }
-
-            .stButton button,
-            .stFormSubmitButton button {
-                border-radius: 8px !important;
-                min-height: 3.1rem;
-                font-weight: 850 !important;
-                border: 1px solid rgba(255,255,255,.12) !important;
-            }
-
-            .stFormSubmitButton button {
-                width: 100%;
-                border: none !important;
-                color: white !important;
-                background: linear-gradient(135deg, var(--gold), var(--rose)) !important;
-                box-shadow: 0 14px 34px rgba(200,169,106,.25);
-            }
-
-            div[data-testid="stForm"] {
-                border: 1px solid var(--line);
-                border-radius: 8px;
-                padding: 1rem;
-                background: rgba(18,20,25,.70);
-            }
-
-            @media (max-width: 620px) {
-                [data-testid="stAppViewBlockContainer"] {
-                    padding-left: .82rem;
-                    padding-right: .82rem;
-                }
-
-                h1 {
-                    font-size: 1.85rem !important;
-                }
-
-                .eu-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def get_service_account_info():
-    try:
-        return dict(st.secrets["gcp_service_account"])
-    except Exception:
-        pass
-
-    for json_path in Path(".").glob("*.json"):
-        with json_path.open("r", encoding="utf-8") as file:
-            service_account = json.load(file)
-        if "client_email" in service_account and "private_key" in service_account:
-            return service_account
-
-    raise RuntimeError("Faltan las credenciales de Google Sheets en Secrets o en un JSON.")
-
-
-@st.cache_resource(show_spinner=False)
+@st.cache_resource
 def get_sheet():
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    creds = Credentials.from_service_account_info(get_service_account_info(), scopes=scopes)
-    client = gspread.authorize(creds)
-    return client.open_by_key(SHEET_ID).sheet1
+    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    credentials = Credentials.from_service_account_info(dict(st.secrets["gcp_service_account"]), scopes=scopes)
+    client = gspread.authorize(credentials)
+    sheet = client.open_by_key(st.secrets["spreadsheet_id"]).get_worksheet(0)
+    if sheet.row_values(1)[:len(HEADERS)] != HEADERS:
+        sheet.update(values=[HEADERS], range_name="A1:K1")
+    return sheet
 
+def safe_cell(value: str) -> str:
+    text = str(value or "").strip()
+    return "'" + text if text.startswith(("=", "+", "-", "@")) else text
 
-def ensure_headers(sheet):
-    primera_fila = sheet.row_values(1)
-    if primera_fila[: len(COLUMNAS)] != COLUMNAS:
-        sheet.update("A1:M1", [COLUMNAS])
+st.markdown(f'<div class="brandbar"><img src="data:image/png;base64,{logo_b64}" alt="Beto\'s"><div class="pickup-chip">📍 Oaxaca 2537 · Recoge en local</div></div>', unsafe_allow_html=True)
+st.markdown("""<section class="hero"><div class="hero-copy"><div class="eyebrow">Sabor casero · Fuego y tradición</div><h1>Tu antojo,<br><span>listo para recoger.</span></h1><p>Elige tus favoritos, revisa el total y confirma tu pedido por WhatsApp. Pagas en efectivo al recoger.</p></div></section><div class="section-title"><div class="eyebrow">Ordena a tu gusto</div><h2>¿Qué se te antoja?</h2></div>""", unsafe_allow_html=True)
+st.markdown('<div class="schedule"><b>Flautas:</b> jueves a domingo · 2–9 PM &nbsp; | &nbsp; <b>Carne asada:</b> sábado y domingo · 2–9 PM</div>', unsafe_allow_html=True)
 
+if "last_order" not in st.session_state:
+    st.session_state.last_order = None
 
-def normalizar_whatsapp(valor):
-    return re.sub(r"\D", "", valor or "")
+with st.form("order_form", clear_on_submit=False):
+    tabs = st.tabs(["🌮 Flautas", "🔥 Carne asada"])
+    quantities = {}
+    for tab, category in zip(tabs, PRODUCTS):
+        with tab:
+            image = "public/brand/plato-flautas.png" if category == "Flautas" else "public/brand/plato-carne-asada.png"
+            left, right = st.columns([1.05, 1.6], vertical_alignment="top")
+            with left:
+                st.image(image, use_container_width=True)
+            with right:
+                for product_name, price, description in PRODUCTS[category]:
+                    quantities[(category, product_name)] = st.number_input(f"{product_name} — ${price}", 0, 50, 0, 1, help=description or None, key=f"qty-{category}-{product_name}")
 
+    st.markdown("### Datos para recoger")
+    c1, c2 = st.columns(2)
+    customer_name = c1.text_input("Nombre del cliente", max_chars=80)
+    phone = c2.text_input("Teléfono (10 dígitos)", max_chars=14)
+    c3, c4 = st.columns(2)
+    pickup_date = c3.date_input("Fecha de recogida", min_value=datetime.now(TZ).date())
+    pickup_time = c4.time_input("Hora de recogida", value=time(18, 0), step=900)
+    notes = st.text_area("Notas (opcional)", max_chars=300, placeholder="Ej. sin salsa, bien doradas…")
+    selected, total = [], 0
+    for category, products in PRODUCTS.items():
+        for product_name, price, _ in products:
+            quantity = quantities[(category, product_name)]
+            if quantity:
+                selected.append((product_name, price, quantity))
+                total += price * quantity
+    st.markdown(f'<div class="total-box"><span>Total a pagar</span><strong>${total:,}</strong></div>', unsafe_allow_html=True)
+    submitted = st.form_submit_button("Registrar pedido", type="primary", use_container_width=True)
 
-def parse_time(valor):
-    hora, minuto = valor.split(":")
-    return time(int(hora), int(minuto))
-
-
-def dia_key(fecha):
-    return DIAS[fecha.weekday()]
-
-
-def formato_hora(dt):
-    return dt.strftime("%I:%M %p").lstrip("0")
-
-
-def normalizar_hora(valor):
-    valor = str(valor).strip().upper()
-    valor = valor.replace(".", "")
-    return valor
-
-
-def formato_duracion(minutos):
-    if minutos == 60:
-        return "1 hora"
-    if minutos == 90:
-        return "1 hora 30 min"
-    return f"{minutos} min"
-
-
-def opciones_fecha(dias=21):
-    opciones = {}
-    hoy = date.today()
-    for offset in range(dias):
-        fecha = hoy + timedelta(days=offset)
-        if offset == 0:
-            etiqueta = "Hoy"
-        elif offset == 1:
-            etiqueta = "Manana"
-        else:
-            etiqueta = f"{DIAS[fecha.weekday()]} {fecha.day} {MESES[fecha.month - 1]}"
-        opciones[etiqueta] = fecha
-    return opciones
-
-
-def es_fecha_cerrada(fecha):
-    return fecha.weekday() == 6
-
-
-def horario_terapeuta(terapeuta, fecha):
-    horario = terapeuta["horario"].get(dia_key(fecha))
-    if not horario:
-        return None
-    return parse_time(horario[0]), parse_time(horario[1])
-
-
-def se_empalma(inicio_1, fin_1, inicio_2, fin_2):
-    return inicio_1 < fin_2 and inicio_2 < fin_1
-
-
-def obtener_citas(fecha, terapeuta_id):
-    sheet = get_sheet()
-    ensure_headers(sheet)
-    filas = sheet.get_all_records()
-    citas = []
-
-    for fila in filas:
-        try:
-            if str(fila.get("fecha")) != str(fecha):
-                continue
-            if fila.get("terapeuta_id") != terapeuta_id:
-                continue
-
-            inicio = datetime.strptime(
-                f"{fila['fecha']} {normalizar_hora(fila['hora'])}",
-                "%Y-%m-%d %I:%M %p",
-            )
-            duracion = int(fila["duracion"])
-            fin = inicio + timedelta(minutes=duracion + BUFFER_MINUTOS)
-            citas.append((inicio, fin))
-        except (KeyError, TypeError, ValueError):
-            continue
-
-    return citas
-
-
-def horarios_disponibles(fecha, duracion, terapeuta):
-    if es_fecha_cerrada(fecha):
-        return []
-
-    horario = horario_terapeuta(terapeuta, fecha)
-    if not horario:
-        return []
-
-    citas = obtener_citas(fecha, terapeuta["id"])
-    inicio_dia = datetime.combine(fecha, horario[0])
-    cierre_dia = datetime.combine(fecha, horario[1])
-    actual = inicio_dia
-    disponibles = []
-
-    while actual < cierre_dia:
-        fin_servicio = actual + timedelta(minutes=duracion + BUFFER_MINUTOS)
-        if fin_servicio <= cierre_dia:
-            ocupado = any(se_empalma(actual, fin_servicio, cita_inicio, cita_fin) for cita_inicio, cita_fin in citas)
-            if not ocupado:
-                disponibles.append(formato_hora(actual))
-        actual += timedelta(minutes=PASO_MINUTOS)
-
-    return disponibles
-
-
-def terapeutas_para_servicio(servicio):
-    return [terapeuta for terapeuta in TERAPEUTAS if servicio in terapeuta["servicios"]]
-
-
-def obtener_citas_admin(fecha):
-    sheet = get_sheet()
-    ensure_headers(sheet)
-    filas = sheet.get_all_records()
-    citas = []
-
-    for fila in filas:
-        if str(fila.get("fecha")) != str(fecha):
-            continue
-        citas.append(
-            {
-                "Fecha": fila.get("fecha", ""),
-                "Hora": fila.get("hora", ""),
-                "Terapeuta": fila.get("terapeuta", ""),
-                "Cliente": fila.get("cliente", ""),
-                "WhatsApp": fila.get("whatsapp", ""),
-                "Servicio": fila.get("servicio", ""),
-                "Duracion": fila.get("duracion", ""),
-                "Estatus": fila.get("estatus", ""),
-                "Comentarios": fila.get("comentarios", ""),
-            }
-        )
-
-    return sorted(citas, key=lambda item: item["Hora"])
-
-
-def render_hero():
-    st.markdown(
-        f"""
-        <div class="eu-hero">
-            <div class="eu-mark">E</div>
-            <div class="eu-eyebrow">{escape(NEGOCIO["categoria"])}</div>
-            <h1>{escape(NEGOCIO["nombre"])}</h1>
-            <p class="eu-copy">
-                Agenda tu masaje con la terapeuta de tu preferencia. El spa revisa tu solicitud
-                y confirma directamente por WhatsApp.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def render_servicios():
-    cards = ['<div class="eu-grid">']
-    for nombre, datos in SERVICIOS.items():
-        cards.append(
-            f'<div class="eu-card"><div class="eu-card-body">'
-            f'<div class="eu-card-title">{escape(nombre)}</div>'
-            f'<div class="eu-card-meta">{formato_duracion(datos["duracion"])} | {escape(datos["precio"])}</div>'
-            f'<div class="eu-muted">{escape(datos["descripcion"])}</div>'
-            f"</div></div>"
-        )
-    cards.append("</div>")
-    st.markdown("".join(cards), unsafe_allow_html=True)
-
-
-def render_catalogo(disponibilidad):
-    cards = ['<div class="eu-grid">']
-    for terapeuta in TERAPEUTAS:
-        foto = Path(terapeuta["foto"])
-        inicial = terapeuta["nombre"].split()[-1]
-        if foto.exists():
-            mime_type = mimetypes.guess_type(foto.name)[0] or "image/jpeg"
-            encoded = base64.b64encode(foto.read_bytes()).decode("utf-8")
-            media = (
-                f'<img class="eu-photo" src="data:{mime_type};base64,{encoded}" '
-                f'alt="{escape(terapeuta["nombre"])}">'
-            )
-        else:
-            media = f'<div class="eu-placeholder">{escape(inicial)}</div>'
-
-        slots = disponibilidad.get(terapeuta["id"], [])
-        if slots:
-            slots_html = "".join(f'<span class="eu-slot">{escape(slot)}</span>' for slot in slots[:6])
-            if len(slots) > 6:
-                slots_html += f'<span class="eu-slot">+{len(slots) - 6}</span>'
-        else:
-            slots_html = '<span class="eu-muted">Sin horarios disponibles para esta seleccion.</span>'
-
-        cards.append(
-            f'<div class="eu-card">'
-            f"{media}"
-            f'<div class="eu-card-body">'
-            f'<div class="eu-card-title">{escape(terapeuta["nombre"])}</div>'
-            f'<div class="eu-card-meta">{escape(", ".join(terapeuta["especialidades"]))}</div>'
-            f'<div class="eu-muted">{escape(" | ".join(terapeuta["servicios"]))}</div>'
-            f'<div class="eu-slots">{slots_html}</div>'
-            f"</div></div>"
-        )
-    cards.append("</div>")
-    st.markdown("".join(cards), unsafe_allow_html=True)
-
-
-def render_admin():
-    st.markdown('<div class="eu-section">', unsafe_allow_html=True)
-    st.markdown("## Panel interno")
-    st.markdown(
-        '<p class="eu-muted">Vista privada para revisar citas y abrir el mensaje de confirmacion por WhatsApp.</p>',
-        unsafe_allow_html=True,
-    )
-
-    password_configurada = st.secrets.get("admin_password", ADMIN_PASSWORD_DEFAULT)
-    password = st.text_input("Clave de administrador", type="password")
-
-    if password != password_configurada:
-        st.info("Ingresa la clave para ver las citas.")
-        st.markdown("</div>", unsafe_allow_html=True)
-        return
-
-    fecha_admin = st.date_input("Fecha", value=date.today(), key="fecha_admin")
-
-    try:
-        citas = obtener_citas_admin(fecha_admin)
-    except Exception as error:
-        st.error(f"No pude cargar las citas: {error}")
-        st.markdown("</div>", unsafe_allow_html=True)
-        return
-
-    if not citas:
-        st.success("No hay citas registradas para esta fecha.")
-        st.markdown("</div>", unsafe_allow_html=True)
-        return
-
-    st.dataframe(citas, use_container_width=True, hide_index=True)
-
-    for cita in citas:
-        whatsapp = normalizar_whatsapp(str(cita["WhatsApp"]))
-        mensaje = (
-            f"Hola {cita['Cliente']}, te contactamos de Europa Spa para confirmar tu cita "
-            f"de {cita['Servicio']} con {cita['Terapeuta']} el {cita['Fecha']} a las {cita['Hora']}."
-        )
-        link = f"https://wa.me/52{whatsapp}?text={quote_plus(mensaje)}"
-        st.markdown(
-            f"""
-            <div class="eu-admin-row">
-                <strong>{escape(cita["Hora"])} | {escape(cita["Terapeuta"])}</strong><br>
-                {escape(cita["Cliente"])} - {escape(cita["Servicio"])} - {escape(cita["WhatsApp"])}<br>
-                <a href="{escape(link)}" target="_blank">Abrir WhatsApp de confirmacion</a>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-def app_cliente():
-    st.markdown('<div class="eu-section">', unsafe_allow_html=True)
-    st.markdown("## Servicio y fecha")
-    st.markdown(
-        f"""
-        <div class="eu-summary">
-            <strong>{escape(NEGOCIO["nombre"])}</strong><br>
-            {escape(NEGOCIO["horario"])}<br>
-            {escape(NEGOCIO["precio"])}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    render_servicios()
-    servicio = st.selectbox("Servicio", list(SERVICIOS.keys()))
-    duracion = SERVICIOS[servicio]["duracion"]
-    fechas = opciones_fecha()
-    fecha_label = st.selectbox("Fecha", list(fechas.keys()))
-    fecha = fechas[fecha_label]
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    disponibilidad = {
-        terapeuta["id"]: horarios_disponibles(fecha, duracion, terapeuta)
-        for terapeuta in terapeutas_para_servicio(servicio)
-    }
-
-    st.markdown('<div class="eu-section">', unsafe_allow_html=True)
-    st.markdown("## Catalogo de terapeutas")
-    if es_fecha_cerrada(fecha):
-        st.warning("Domingo cerrado. Selecciona otra fecha.")
+if submitted:
+    digits = "".join(ch for ch in phone if ch.isdigit())
+    errors = []
+    if not selected: errors.append("Agrega al menos un producto.")
+    if len(customer_name.strip()) < 2: errors.append("Escribe el nombre del cliente.")
+    if len(digits) != 10: errors.append("El teléfono debe tener 10 dígitos.")
+    if not time(14, 0) <= pickup_time <= time(21, 0): errors.append("La hora debe ser entre 2:00 y 9:00 PM.")
+    if errors:
+        for error in errors: st.error(error)
     else:
-        render_catalogo(disponibilidad)
-    st.markdown("</div>", unsafe_allow_html=True)
+        now = datetime.now(TZ)
+        folio = f"BET-{now.strftime('%m%d%H%M%S')}"
+        order_text = " | ".join(f"{qty} × {product}" for product, _, qty in selected)
+        try:
+            get_sheet().append_row([now.strftime("%d/%m/%Y %I:%M:%S %p"), folio, safe_cell(customer_name), digits, safe_cell(order_text), total, pickup_date.strftime("%d/%m/%Y"), pickup_time.strftime("%I:%M %p"), safe_cell(notes), "Efectivo", "Nuevo"], value_input_option="USER_ENTERED")
+            lines = [f"• {qty} × {product} — ${price * qty:,}" for product, price, qty in selected]
+            message = "\n".join(["¡Hola, Beto's! Quiero confirmar este pedido para recoger:", f"Folio: {folio}", f"Nombre: {customer_name.strip()}", f"Teléfono: {digits}", f"Recoger: {pickup_date.strftime('%d/%m/%Y')} a las {pickup_time.strftime('%I:%M %p')}", "", *lines, "", f"TOTAL: ${total:,}", "Pago: efectivo al recoger", "Lugar: Calle Oaxaca 2537", f"Notas: {notes.strip()}" if notes.strip() else "", "", "¿Me confirman el pedido?"])
+            st.session_state.last_order = {"folio": folio, "url": f"https://wa.me/526561614536?text={quote(message)}"}
+        except Exception:
+            st.error("No se pudo registrar el pedido. Revisa la conexión con Google Sheets.")
 
-    terapeutas_con_horario = {
-        f'{terapeuta["nombre"]} - {len(disponibilidad.get(terapeuta["id"], []))} horarios': terapeuta
-        for terapeuta in terapeutas_para_servicio(servicio)
-        if disponibilidad.get(terapeuta["id"])
-    }
+if st.session_state.last_order:
+    order = st.session_state.last_order
+    st.success(f"Pedido {order['folio']} registrado en Google Sheets.")
+    st.markdown(f'<div class="wa-link"><a href="{order["url"]}" target="_blank">Confirmar por WhatsApp</a></div>', unsafe_allow_html=True)
 
-    if es_fecha_cerrada(fecha) or not terapeutas_con_horario:
-        st.warning("No hay horarios disponibles para este servicio en la fecha seleccionada.")
-        return
-
-    st.markdown('<div class="eu-section">', unsafe_allow_html=True)
-    st.markdown("## Confirmar solicitud")
-
-    with st.form("form_reserva", clear_on_submit=True):
-        terapeuta_label = st.selectbox("Terapeuta", list(terapeutas_con_horario.keys()))
-        terapeuta = terapeutas_con_horario[terapeuta_label]
-        hora = st.selectbox("Hora disponible", disponibilidad[terapeuta["id"]])
-        nombre = st.text_input("Nombre del cliente", placeholder="Nombre completo")
-        whatsapp = st.text_input("WhatsApp", placeholder="10 digitos", max_chars=14)
-        comentarios = st.text_area("Comentarios adicionales", placeholder="Opcional")
-        enviar = st.form_submit_button("Guardar solicitud")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    if not enviar:
-        return
-
-    nombre = nombre.strip()
-    whatsapp_limpio = normalizar_whatsapp(whatsapp)
-    horas_actualizadas = horarios_disponibles(fecha, duracion, terapeuta)
-
-    if not nombre:
-        st.error("Escribe el nombre del cliente.")
-        return
-
-    if len(whatsapp_limpio) != 10:
-        st.error("El WhatsApp debe tener exactamente 10 digitos.")
-        return
-
-    if hora not in horas_actualizadas:
-        st.error("Ese horario acaba de ocuparse. Elige otro.")
-        return
-
-    try:
-        sheet = get_sheet()
-        ensure_headers(sheet)
-        sheet.append_row(
-            [
-                datetime.now().strftime("%Y%m%d%H%M%S"),
-                NEGOCIO["nombre"],
-                terapeuta["id"],
-                terapeuta["nombre"],
-                nombre,
-                whatsapp_limpio,
-                servicio,
-                duracion,
-                str(fecha),
-                hora,
-                "Pendiente",
-                comentarios,
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            ]
-        )
-        get_sheet.clear()
-        st.markdown(
-            f"""
-            <div class="eu-success">
-                <strong>Cita guardada correctamente.</strong><br>
-                {escape(servicio)} con {escape(terapeuta["nombre"])} el {fecha.strftime("%d/%m/%Y")}
-                a las {escape(hora)}. Europa Spa recibio la solicitud para confirmar por WhatsApp.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    except Exception as error:
-        st.error(f"No pude guardar la cita: {error}")
-
-
-inject_css()
-render_hero()
-
-vista = st.radio("Vista", ["Agendar cita", "Panel interno"], horizontal=True, label_visibility="collapsed")
-
-if vista == "Agendar cita":
-    app_cliente()
-else:
-    render_admin()
-
-st.caption("Europa Spa | Agenda digital privada")
+st.markdown("""<section class="events"><div class="eyebrow">Beto's va a tu evento</div><h2>El sabor que reúne a todos.</h2><p>¿Cumpleaños, reunión o evento especial? Cotizamos el servicio a domicilio según tus invitados y necesidades.</p></section>""", unsafe_allow_html=True)
+st.link_button("Cotizar evento por WhatsApp", "https://wa.me/526561614536?text=Hola%2C%20quiero%20cotizar%20un%20evento%20a%20domicilio%20con%20Beto%27s.", use_container_width=True)
