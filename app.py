@@ -114,9 +114,9 @@ SCHEDULES = {
     "Carne Asada Beto's": {
         "days": {5, 6},
         "days_text": "Sábado y Domingo",
-        "hours_text": "2:00 PM a 8:00 PM",
+        "hours_text": "2:00 PM a 9:00 PM",
         "open": time(14, 0),
-        "close": time(20, 0),
+        "close": time(21, 0),
     },
 }
 
@@ -320,7 +320,7 @@ with choice_right:
           <div class="eyebrow">Opción 2</div>
           <h3>Carne Asada Beto's</h3>
           <p><strong>Horario</strong></p>
-          <p>Sábado y Domingo<br>2:00 PM a 8:00 PM</p>
+          <p>Sábado y Domingo<br>2:00 PM a 9:00 PM</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -370,10 +370,28 @@ with st.form("order_form", clear_on_submit=False):
         "Fecha de recogida",
         min_value=datetime.now(TZ).date(),
     )
-    selected_time = c4.time_input(
+    opening_datetime = datetime.combine(pickup_date, schedule["open"], tzinfo=TZ)
+    last_order_datetime = datetime.combine(
+        pickup_date,
+        schedule["close"],
+        tzinfo=TZ,
+    ) - timedelta(minutes=20)
+    time_options = []
+    option_datetime = opening_datetime
+    while option_datetime <= last_order_datetime:
+        time_options.append(option_datetime.time())
+        option_datetime += timedelta(minutes=10)
+    default_time = time(18, 0)
+    default_index = (
+        time_options.index(default_time)
+        if default_time in time_options
+        else 0
+    )
+    selected_time = c4.selectbox(
         "Hora estimada en que estará listo el pedido",
-        value=time(18, 0),
-        step=900,
+        options=time_options,
+        index=default_index,
+        format_func=lambda selected: selected.strftime("%I:%M %p"),
         help="El sistema agregará automáticamente 20 minutos a la hora seleccionada.",
     )
 
