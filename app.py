@@ -276,7 +276,7 @@ st.markdown(
     f"""
     <div class="brandbar">
       <img src="data:image/png;base64,{logo_b64}" alt="Beto's">
-      <div class="pickup-chip">📍 Oaxaca #2537 · Recoge en local</div>
+      <div class="pickup-chip">📍 Calle Oaxaca 2537 · Recoge en local</div>
     </div>
     <section class="welcome">
       <h1>Beto's<br>Sabor casero, fuego y tradición</h1>
