@@ -217,8 +217,13 @@ p,div,label,input,textarea,button{font-family:'DM Sans',sans-serif}
 .missing-logo{margin:0 auto 1.25rem;padding:1rem;border:2px dashed #bda987;border-radius:10px;text-align:center;font-weight:800;color:#7d291f}
 div.stButton>button{min-height:58px;border-radius:9px;font-weight:900;font-size:1.05rem}
 [data-testid="stRadio"]>div{display:flex;gap:.8rem;flex-wrap:wrap}
-[data-testid="stRadio"] label{background:#fff7e7;border:2px solid #d7c39e;border-radius:10px;padding:.8rem 1.15rem;min-width:190px;font-weight:800;box-shadow:0 3px 0 rgba(49,34,18,.08)}
-[data-testid="stRadio"] label:has(input:checked){border-color:var(--red);background:#fff0e5;color:var(--red);box-shadow:0 0 0 3px rgba(152,27,22,.1)}
+[data-testid="stRadio"] label{background:var(--gold);color:#28180d;border:2px solid #bd7916;border-radius:10px;padding:.9rem 1.2rem;min-width:190px;font-weight:900;box-shadow:0 4px 0 rgba(81,43,13,.18);transition:.15s ease}
+[data-testid="stRadio"] label:hover{transform:translateY(-1px);filter:brightness(1.04)}
+[data-testid="stRadio"] label:has(input:checked){border-color:#73130f;background:var(--red);color:#fff;box-shadow:0 0 0 4px rgba(152,27,22,.16),0 4px 0 #64120f}
+[data-testid="stSelectbox"]>div>div{background:#fff0cf;border-color:#c48421;color:#681b16;font-weight:800}
+div[data-baseweb="popover"] ul{background:#fff4dc}
+div[data-baseweb="popover"] li{color:#651b16;font-weight:700}
+div[data-baseweb="popover"] li:hover{background:var(--gold)!important;color:#20130b!important}
 .active-choice{border-color:var(--red);box-shadow:0 0 0 3px rgba(152,27,22,.12)}
 .selected-banner{margin:1.1rem 0;padding:1rem 1.2rem;border-radius:10px;background:#efe3ca;font-weight:800}
 div[data-testid="stNumberInput"]{background:#fff;border-radius:10px;padding:.5rem .8rem;border:1px solid #e1d4bc}
