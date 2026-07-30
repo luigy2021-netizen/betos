@@ -98,12 +98,24 @@ def image_b64(*candidates: str) -> str:
         return base64.b64encode(image_file.read()).decode()
 
 
+def optional_image_b64(*candidates: str) -> str:
+    for candidate in candidates:
+        path = Path(candidate)
+        if path.exists():
+            with path.open("rb") as image_file:
+                return base64.b64encode(image_file.read()).decode()
+    return ""
+
+
 logo_b64 = image_b64("public/brand/betos-logo.png", "beto's-logo.png")
-carne_logo_b64 = image_b64(
+carne_logo_b64 = optional_image_b64(
     "public/brand/logo-carne-asada.png",
     "logo carne asada.png",
-    "public/brand/betos-logo.png",
-    "beto's-logo.png",
+)
+carne_logo_markup = (
+    f'<img class="choice-logo" src="data:image/png;base64,{carne_logo_b64}" alt="Carne Asada Beto\'s">'
+    if carne_logo_b64
+    else '<div class="missing-logo">Sube logo-carne-asada.png a public/brand/</div>'
 )
 flautas_b64 = image_b64("public/brand/plato-flautas.png", "Plato-flautas.png")
 asada_b64 = image_b64(
@@ -138,11 +150,12 @@ p,div,label,input,textarea,button{font-family:'DM Sans',sans-serif}
 .eyebrow{color:var(--red);font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
 .choice-title{text-align:center;margin:3.7rem 0 1.3rem}
 .choice-title h2{font-size:clamp(2.5rem,6vw,4.5rem);margin:.25rem 0}
-.choice-card{border:2px solid #d8c6a6;border-radius:16px;padding:1.25rem;background:#fff;margin-bottom:.8rem;min-height:215px}
+.choice-card{border:2px solid #d8c6a6;border-radius:16px;padding:1.5rem;background:#fff;margin-bottom:.8rem;min-height:430px;display:flex;flex-direction:column;justify-content:center}
 .choice-card h3{font-size:2rem;margin:.2rem 0 .8rem}
 .choice-card p{margin:.3rem 0;line-height:1.5}
 .choice-card strong{color:var(--red)}
-.choice-logo{width:118px;height:80px;object-fit:contain;display:block;margin:0 0 .5rem auto}
+.choice-logo{width:min(90%,290px);height:185px;object-fit:contain;display:block;margin:0 auto 1.25rem}
+.missing-logo{margin:0 auto 1.25rem;padding:1rem;border:2px dashed #bda987;border-radius:10px;text-align:center;font-weight:800;color:#7d291f}
 div.stButton>button{min-height:58px;border-radius:9px;font-weight:900;font-size:1.05rem}
 .active-choice{border-color:var(--red);box-shadow:0 0 0 3px rgba(152,27,22,.12)}
 .selected-banner{margin:1.1rem 0;padding:1rem 1.2rem;border-radius:10px;background:#efe3ca;font-weight:800}
@@ -166,8 +179,8 @@ div[data-testid="stForm"]{background:#fff;border:1px solid #dfd1b8;border-radius
 @media(max-width:700px){
  .block-container{padding:1rem .85rem 5rem}.brandbar img{width:112px;height:112px}.pickup-chip{font-size:.72rem;padding:.55rem .7rem}
  .welcome{padding:2.2rem 1.2rem;min-height:510px;display:flex;flex-direction:column;justify-content:center;background-position:58% center}
- .welcome h1{font-size:3.5rem}.choice-title{margin-top:3rem}.choice-card{min-height:auto;padding:1rem}
- .choice-card h3{font-size:1.7rem}.location{display:block;padding:1.4rem}.events{padding:2.2rem 1.2rem}
+ .welcome h1{font-size:3.5rem}.choice-title{margin-top:3rem}.choice-card{min-height:380px;padding:1rem}
+ .choice-card h3{font-size:1.7rem}.choice-logo{width:240px;height:155px}.location{display:block;padding:1.4rem}.events{padding:2.2rem 1.2rem}
  .kroniq-ad{grid-template-columns:1fr;text-align:center}.kroniq-ad img{width:210px;margin:auto}.kroniq-ad a{white-space:normal}
  div[data-testid="stForm"]{padding:1rem}.stHorizontalBlock{flex-wrap:wrap}.stHorizontalBlock>div{min-width:100%}
 }
@@ -240,6 +253,7 @@ with choice_left:
     st.markdown(
         f"""
         <div class="choice-card{active_class}">
+          <img class="choice-logo" src="data:image/png;base64,{logo_b64}" alt="Flautas Beto's">
           <div class="eyebrow">Opción 1</div>
           <h3>Flautas Beto's</h3>
           <p><strong>Horario</strong></p>
@@ -258,7 +272,7 @@ with choice_right:
     st.markdown(
         f"""
         <div class="choice-card{active_class}">
-          <img class="choice-logo" src="data:image/png;base64,{carne_logo_b64}" alt="Carne Asada Beto's">
+          {carne_logo_markup}
           <div class="eyebrow">Opción 2</div>
           <h3>Carne Asada Beto's</h3>
           <p><strong>Horario</strong></p>
