@@ -20,7 +20,7 @@ st.set_page_config(
 
 TZ = ZoneInfo("America/Ojinaga")
 WHATSAPP_NUMBER = "526561614536"
-ADDRESS_LINE_1 = "Calle Oaxaca #2537"
+ADDRESS_LINE_1 = "Calle Oaxaca 2537"
 ADDRESS_LINE_2 = "Entre Henequén y Santiago Blancas"
 GOOGLE_MAPS_URL = "https://www.google.com/maps/place/C.+Oaxaca+2537,+Eco+2000,+32574+Ju%C3%A1rez,+Chih./@31.6385404,-106.3841634,15z/data=!4m6!3m5!1s0x86e76791d9de6b7f:0xb1a490fa09e0c37b!8m2!3d31.6369682!4d-106.3780037!16s%2Fg%2F11mtdjfy39?entry=ttu&g_ep=EgoyMDI2MDcyNy4wIKXMDSoASAFQAw%3D%3D"
 BANK_NAME = "Banco Azteca"
@@ -48,22 +48,58 @@ PRODUCTS = {
         ("Guacamole extra", 10, ""),
         ("Salsa extra", 10, ""),
         ("Crema extra", 10, ""),
-        ("Soda Coca-Cola", 25, ""),
-        ("Soda Sprite", 25, ""),
-        ("Soda Dr Pepper", 25, ""),
-        ("Soda Manzana", 25, ""),
+        ("Coca-Cola de lata", 25, ""),
+        ("Sprite de lata", 25, ""),
+        ("Dr Pepper de lata", 25, ""),
+        ("Brisk de lata", 25, ""),
+        ("Fresca 600 ml", 25, ""),
+        ("Fanta 600 ml", 25, ""),
+        ("Manzanita 600 ml", 25, ""),
+        ("Sprite 600 ml", 25, ""),
+        ("Arizona Sandía", 25, ""),
+        ("Arizona Frutas", 25, ""),
+        ("Arizona Mango", 25, ""),
+        ("Agua natural 335 ml", 15, ""),
     ],
     "Carne Asada Beto's": [
-        ("1 kg de carne asada", 400, "Papa, cebolla, tortillas y chiles toreados"),
-        ("½ kg de carne asada", 250, "Papa, cebolla, tortillas y chiles toreados"),
-        ("Platillo individual", 150, "250 g de carne, papa, cebolla, tortillas y chiles"),
-        ("1 kg de costilla", 300, "Papa, cebolla, tortillas y salsas"),
-        ("½ kg de costilla", 200, "Papa, cebolla, tortillas y salsa"),
-        ("Platillo individual de costilla", 120, "250 g con papa, cebolla, tortillas y chiles"),
-        ("Soda Coca-Cola", 25, ""),
-        ("Soda Sprite", 25, ""),
-        ("Soda Dr Pepper", 25, ""),
-        ("Soda Manzana", 25, ""),
+        (
+            "Paquete 1 · Chuleta de res",
+            600,
+            "1 kg de chuleta, 2 papas asadas sazonadas, 2 quesadillas, "
+            "2 cebollas sazonadas, 2 chiles chilaca con queso, 2 salchichas, "
+            "tortillas, salsa roja, guacamole y soda de 2 litros",
+        ),
+        (
+            "Paquete 2 · Chuleta de res",
+            350,
+            "½ kg de chuleta, 1 papa con mantequilla, 1 cebolla sazonada, "
+            "1 salchicha, 1 quesadilla, 1 chile chilaca y soda de lata",
+        ),
+        (
+            "Paquete 3 · Costillas",
+            500,
+            "1 kg de costillas, 2 papas asadas sazonadas, 2 quesadillas, "
+            "2 cebollas sazonadas, 2 chiles chilaca con queso, 2 salchichas, "
+            "tortillas, salsa roja, guacamole y soda de 2 litros",
+        ),
+        (
+            "Paquete 4 · Costillas",
+            300,
+            "½ kg de costillas, 1 papa con mantequilla, 1 cebolla sazonada, "
+            "1 salchicha, 1 quesadilla, 1 chile chilaca y soda de lata",
+        ),
+        ("Coca-Cola de lata", 25, ""),
+        ("Sprite de lata", 25, ""),
+        ("Dr Pepper de lata", 25, ""),
+        ("Brisk de lata", 25, ""),
+        ("Fresca 600 ml", 25, ""),
+        ("Fanta 600 ml", 25, ""),
+        ("Manzanita 600 ml", 25, ""),
+        ("Sprite 600 ml", 25, ""),
+        ("Arizona Sandía", 25, ""),
+        ("Arizona Frutas", 25, ""),
+        ("Arizona Mango", 25, ""),
+        ("Agua natural 335 ml", 15, ""),
     ],
 }
 
@@ -149,8 +185,8 @@ p,div,label,input,textarea,button{font-family:'DM Sans',sans-serif}
 .pickup-chip{padding:.7rem 1rem;border:1px solid #d9c9aa;border-radius:999px;font-weight:800;background:#fff;text-align:center}
 .welcome{border-radius:20px;padding:clamp(2rem,6vw,5rem);color:#fff8e8;background:linear-gradient(115deg,rgba(22,12,8,.96),rgba(61,18,12,.78)),url('data:image/png;base64,FLAUTAS_BG') center 55%/cover;box-shadow:0 18px 50px rgba(76,33,15,.18)}
 .welcome .eyebrow,.events .eyebrow{color:var(--gold)}
-.welcome h1{font-size:clamp(3.2rem,8vw,7rem);line-height:.88;letter-spacing:-.035em;margin:.6rem 0 1.2rem;max-width:900px}
-.welcome h1 span{color:var(--gold)}
+.welcome h1{font-size:clamp(3.8rem,8vw,7.2rem);line-height:.9;letter-spacing:-.035em;margin:.6rem 0 1rem;max-width:960px;color:var(--gold)}
+.welcome .slogan{font-family:'Oswald',sans-serif;font-size:clamp(1.8rem,4vw,3.5rem);line-height:1;text-transform:uppercase;font-weight:700;max-width:760px;margin:0 0 1.4rem;color:#fff8e8}
 .welcome p{font-size:clamp(1rem,2vw,1.25rem);line-height:1.6;max-width:650px;color:#f3e6d2}
 .eyebrow{color:var(--red);font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
 .choice-title{text-align:center;margin:3.7rem 0 1.3rem}
@@ -162,6 +198,9 @@ p,div,label,input,textarea,button{font-family:'DM Sans',sans-serif}
 .choice-logo{width:min(90%,290px);height:185px;object-fit:contain;display:block;margin:0 auto 1.25rem}
 .missing-logo{margin:0 auto 1.25rem;padding:1rem;border:2px dashed #bda987;border-radius:10px;text-align:center;font-weight:800;color:#7d291f}
 div.stButton>button{min-height:58px;border-radius:9px;font-weight:900;font-size:1.05rem}
+[data-testid="stRadio"]>div{display:flex;gap:.8rem;flex-wrap:wrap}
+[data-testid="stRadio"] label{background:#fff7e7;border:2px solid #d7c39e;border-radius:10px;padding:.8rem 1.15rem;min-width:190px;font-weight:800;box-shadow:0 3px 0 rgba(49,34,18,.08)}
+[data-testid="stRadio"] label:has(input:checked){border-color:var(--red);background:#fff0e5;color:var(--red);box-shadow:0 0 0 3px rgba(152,27,22,.1)}
 .active-choice{border-color:var(--red);box-shadow:0 0 0 3px rgba(152,27,22,.12)}
 .selected-banner{margin:1.1rem 0;padding:1rem 1.2rem;border-radius:10px;background:#efe3ca;font-weight:800}
 div[data-testid="stNumberInput"]{background:#fff;border-radius:10px;padding:.5rem .8rem;border:1px solid #e1d4bc}
@@ -184,7 +223,7 @@ div[data-testid="stForm"]{background:#fff;border:1px solid #dfd1b8;border-radius
 @media(max-width:700px){
  .block-container{padding:1rem .85rem 5rem}.brandbar img{width:112px;height:112px}.pickup-chip{font-size:.72rem;padding:.55rem .7rem}
  .welcome{padding:2.2rem 1.2rem;min-height:510px;display:flex;flex-direction:column;justify-content:center;background-position:58% center}
- .welcome h1{font-size:3.5rem}.choice-title{margin-top:3rem}.choice-card{min-height:380px;padding:1rem}
+ .welcome h1{font-size:3.8rem}.welcome .slogan{font-size:2rem}.choice-title{margin-top:3rem}.choice-card{min-height:380px;padding:1rem}
  .choice-card h3{font-size:1.7rem}.choice-logo{width:240px;height:155px}.location{display:block;padding:1.4rem}.events{padding:2.2rem 1.2rem}
  .kroniq-ad{grid-template-columns:1fr;text-align:center}.kroniq-ad img{width:210px;margin:auto}.kroniq-ad a{white-space:normal}
  div[data-testid="stForm"]{padding:1rem}.stHorizontalBlock{flex-wrap:wrap}.stHorizontalBlock>div{min-width:100%}
@@ -240,8 +279,8 @@ st.markdown(
       <div class="pickup-chip">📍 Oaxaca #2537 · Recoge en local</div>
     </div>
     <section class="welcome">
-      <div class="eyebrow">Beto's · Sabor casero, fuego y tradición</div>
-      <h1>El sabor que<br><span>reúne a todos</span></h1>
+      <h1>Beto's<br>Sabor casero, fuego y tradición</h1>
+      <div class="slogan">El sabor que reúne a todos</div>
       <p>Flautas doradas y carne asada preparadas para compartir. Elige lo que se te antoja y arma tu pedido.</p>
     </section>
     <div class="choice-title">
@@ -352,6 +391,7 @@ with st.form("order_form", clear_on_submit=False):
     payment_method = st.radio(
         "Método de pago",
         ["Efectivo", "Transferencia bancaria"],
+        horizontal=True,
     )
     if payment_method == "Transferencia bancaria":
         st.markdown(
