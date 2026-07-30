@@ -40,28 +40,40 @@ HEADERS = [
     "Estado",
 ]
 
-PRODUCTS = {
-    "Flautas Beto's": [
-        ("Flauta de carne", 45, "Crujiente, sabrosa y hecha con orgullo"),
-        ("Flauta de papa", 40, "Dorada al momento"),
-        ("Cueritos", 10, ""),
-        ("Guacamole extra", 10, ""),
-        ("Salsa extra", 10, ""),
-        ("Crema extra", 10, ""),
-        ("Coca-Cola de lata", 25, ""),
-        ("Sprite de lata", 25, ""),
-        ("Dr Pepper de lata", 25, ""),
-        ("Brisk de lata", 25, ""),
-        ("Fresca 600 ml", 25, ""),
-        ("Fanta 600 ml", 25, ""),
-        ("Manzanita 600 ml", 25, ""),
-        ("Sprite 600 ml", 25, ""),
-        ("Arizona Sandía", 25, ""),
-        ("Arizona Frutas", 25, ""),
-        ("Arizona Mango", 25, ""),
-        ("Agua natural 335 ml", 15, ""),
-    ],
-    "Carne Asada Beto's": [
+DRINKS = [
+    ("Coca-Cola de lata", 25, ""),
+    ("Sprite de lata", 25, ""),
+    ("Dr Pepper de lata", 25, ""),
+    ("Brisk de lata", 25, ""),
+    ("Fresca 600 ml", 25, ""),
+    ("Fanta 600 ml", 25, ""),
+    ("Manzanita 600 ml", 25, ""),
+    ("Sprite 600 ml", 25, ""),
+    ("Arizona Sandía", 25, ""),
+    ("Arizona Frutas", 25, ""),
+    ("Arizona Mango", 25, ""),
+    ("Agua natural 335 ml", 15, ""),
+]
+
+FLAUTAS_ITEMS = [
+    ("Flauta de carne", 45, "Crujiente, sabrosa y hecha con orgullo"),
+    ("Flauta de papa", 40, "Dorada al momento"),
+    ("Cueritos", 10, ""),
+    ("Guacamole extra", 10, ""),
+    ("Salsa extra", 10, ""),
+    ("Crema extra", 10, ""),
+]
+
+ASADA_A_LA_CARTA = [
+    ("1 kg de carne asada", 400, "Papa, cebolla, tortillas y chiles toreados"),
+    ("½ kg de carne asada", 250, "Papa, cebolla, tortillas y chiles toreados"),
+    ("Platillo individual", 150, "250 g de carne, papa, cebolla, tortillas y chiles"),
+    ("1 kg de costilla", 300, "Papa, cebolla, tortillas y salsas"),
+    ("½ kg de costilla", 200, "Papa, cebolla, tortillas y salsa"),
+    ("Platillo individual de costilla", 120, "250 g con papa, cebolla, tortillas y chiles"),
+]
+
+ASADA_PACKAGES = [
         (
             "Paquete 1 · Chuleta de res",
             600,
@@ -88,19 +100,25 @@ PRODUCTS = {
             "½ kg de costillas, 1 papa con mantequilla, 1 cebolla sazonada, "
             "1 salchicha, 1 quesadilla, 1 chile chilaca y soda de lata",
         ),
-        ("Coca-Cola de lata", 25, ""),
-        ("Sprite de lata", 25, ""),
-        ("Dr Pepper de lata", 25, ""),
-        ("Brisk de lata", 25, ""),
-        ("Fresca 600 ml", 25, ""),
-        ("Fanta 600 ml", 25, ""),
-        ("Manzanita 600 ml", 25, ""),
-        ("Sprite 600 ml", 25, ""),
-        ("Arizona Sandía", 25, ""),
-        ("Arizona Frutas", 25, ""),
-        ("Arizona Mango", 25, ""),
-        ("Agua natural 335 ml", 15, ""),
-    ],
+]
+
+PRODUCT_GROUPS = {
+    "Flautas Beto's": {
+        "Flautas y extras": FLAUTAS_ITEMS,
+        "Bebidas": DRINKS,
+    },
+    "Carne Asada Beto's": {
+        "A la carta": ASADA_A_LA_CARTA,
+        "Paquetes": ASADA_PACKAGES,
+        "Bebidas": DRINKS,
+    },
+}
+
+PRODUCT_CATALOG = {
+    product_name: (price, description)
+    for groups in PRODUCT_GROUPS.values()
+    for products in groups.values()
+    for product_name, price, description in products
 }
 
 SCHEDULES = {
@@ -271,6 +289,8 @@ if "order_category" not in st.session_state:
     st.session_state.order_category = "Flautas Beto's"
 if "last_order" not in st.session_state:
     st.session_state.last_order = None
+if "cart" not in st.session_state:
+    st.session_state.cart = {}
 
 st.markdown(
     f"""
@@ -307,6 +327,8 @@ with choice_left:
         unsafe_allow_html=True,
     )
     if st.button("Elegir Flautas Beto's", use_container_width=True, type="primary"):
+        if st.session_state.order_category != "Flautas Beto's":
+            st.session_state.cart = {}
         st.session_state.order_category = "Flautas Beto's"
         st.session_state.last_order = None
         st.rerun()
@@ -326,6 +348,8 @@ with choice_right:
         unsafe_allow_html=True,
     )
     if st.button("Elegir Carne Asada Beto's", use_container_width=True, type="primary"):
+        if st.session_state.order_category != "Carne Asada Beto's":
+            st.session_state.cart = {}
         st.session_state.order_category = "Carne Asada Beto's"
         st.session_state.last_order = None
         st.rerun()
@@ -343,24 +367,91 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-with st.form("order_form", clear_on_submit=False):
-    st.markdown(f"## Menú de {category}")
-    menu_left, menu_right = st.columns([1.05, 1.6], vertical_alignment="top")
-    quantities = {}
-    with menu_left:
-        st.image(category_image, use_container_width=True)
-    with menu_right:
-        for product_name, price, description in PRODUCTS[category]:
-            quantities[product_name] = st.number_input(
-                f"{product_name} — ${price}",
-                min_value=0,
-                max_value=50,
-                value=0,
-                step=1,
-                help=description or None,
-                key=f"qty-{category}-{product_name}",
-            )
+st.markdown(f"## Menú de {category}")
+menu_left, menu_right = st.columns([1.05, 1.6], vertical_alignment="top")
+with menu_left:
+    st.image(category_image, use_container_width=True)
+with menu_right:
+    group_names = list(PRODUCT_GROUPS[category])
+    selected_group = st.radio(
+        "Selecciona una sección",
+        group_names,
+        horizontal=True,
+        key=f"group-{category}",
+    )
+    group_products = PRODUCT_GROUPS[category][selected_group]
+    product_names = [product[0] for product in group_products]
+    selected_product_name = st.selectbox(
+        "Producto",
+        product_names,
+        key=f"product-{category}-{selected_group}",
+    )
+    product_price, product_description = PRODUCT_CATALOG[selected_product_name]
+    if product_description:
+        st.caption(product_description)
+    st.markdown(f"### ${product_price:,}")
+    add_left, add_right = st.columns([1, 2])
+    add_quantity = add_left.number_input(
+        "Cantidad",
+        min_value=1,
+        max_value=50,
+        value=1,
+        step=1,
+        key=f"add-quantity-{category}-{selected_group}",
+    )
+    if add_right.button(
+        "Agregar al pedido",
+        type="primary",
+        use_container_width=True,
+        key=f"add-{category}-{selected_group}",
+    ):
+        st.session_state.cart[selected_product_name] = (
+            st.session_state.cart.get(selected_product_name, 0) + add_quantity
+        )
+        st.session_state.last_order = None
+        st.rerun()
 
+selected = []
+total = 0
+for product_name, quantity in st.session_state.cart.items():
+    if quantity and product_name in PRODUCT_CATALOG:
+        price, _ = PRODUCT_CATALOG[product_name]
+        selected.append((product_name, price, quantity))
+        total += price * quantity
+
+if selected:
+    st.markdown("### Mi pedido")
+    cart_lines = "".join(
+        f"<p><strong>{quantity} × {product_name}</strong>"
+        f"<span style='float:right'>${price * quantity:,}</span></p>"
+        for product_name, price, quantity in selected
+    )
+    st.markdown(
+        f'<div class="pending-note">{cart_lines}</div>',
+        unsafe_allow_html=True,
+    )
+    remove_left, remove_right = st.columns([2, 1])
+    product_to_remove = remove_left.selectbox(
+        "Quitar producto",
+        [product_name for product_name, _, _ in selected],
+    )
+    if remove_right.button("Quitar", use_container_width=True):
+        del st.session_state.cart[product_to_remove]
+        st.session_state.last_order = None
+        st.rerun()
+    if st.button("Vaciar pedido", use_container_width=True):
+        st.session_state.cart = {}
+        st.session_state.last_order = None
+        st.rerun()
+else:
+    st.info("Tu pedido está vacío. Elige un producto y agrégalo.")
+
+st.markdown(
+    f'<div class="total-box"><span>Total a pagar</span><strong>${total:,}</strong></div>',
+    unsafe_allow_html=True,
+)
+
+with st.form("order_form", clear_on_submit=False):
     st.markdown("### Datos para recoger")
     c1, c2 = st.columns(2)
     customer_name = c1.text_input("Nombre del cliente", max_chars=80)
@@ -429,18 +520,6 @@ with st.form("order_form", clear_on_submit=False):
         placeholder="Ej. sin salsa, bien doradas…",
     )
 
-    selected = []
-    total = 0
-    for product_name, price, _ in PRODUCTS[category]:
-        quantity = quantities[product_name]
-        if quantity:
-            selected.append((product_name, price, quantity))
-            total += price * quantity
-
-    st.markdown(
-        f'<div class="total-box"><span>Total a pagar</span><strong>${total:,}</strong></div>',
-        unsafe_allow_html=True,
-    )
     submitted = st.form_submit_button(
         "Registrar pedido",
         type="primary",
