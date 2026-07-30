@@ -110,6 +110,7 @@ def optional_image_b64(*candidates: str) -> str:
 logo_b64 = image_b64("public/brand/betos-logo.png", "beto's-logo.png")
 carne_logo_b64 = optional_image_b64(
     "public/brand/logo-carne-asada.png",
+    "public/brand/logo carne asada.png",
     "logo carne asada.png",
 )
 carne_logo_markup = (
@@ -124,7 +125,9 @@ asada_b64 = image_b64(
 )
 events_b64 = image_b64(
     "public/brand/eventos-familia-betos.png",
+    "public/brand/reunion.png",
     "eventos-familia-betos.png",
+    "reunion.png",
     "public/brand/plato-carne-asada.png",
     "plato.carne-asada.png",
 )
