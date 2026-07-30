@@ -90,6 +90,10 @@ def find_asset(*candidates: str) -> Path:
         path = Path(candidate)
         if path.exists():
             return path
+    candidate_names = {Path(candidate).name.casefold() for candidate in candidates}
+    for path in Path(".").rglob("*"):
+        if path.is_file() and path.name.casefold() in candidate_names:
+            return path
     raise FileNotFoundError(f"No se encontró el recurso: {candidates[0]}")
 
 
@@ -99,12 +103,12 @@ def image_b64(*candidates: str) -> str:
 
 
 def optional_image_b64(*candidates: str) -> str:
-    for candidate in candidates:
-        path = Path(candidate)
-        if path.exists():
-            with path.open("rb") as image_file:
-                return base64.b64encode(image_file.read()).decode()
-    return ""
+    try:
+        path = find_asset(*candidates)
+        with path.open("rb") as image_file:
+            return base64.b64encode(image_file.read()).decode()
+    except FileNotFoundError:
+        return ""
 
 
 logo_b64 = image_b64("public/brand/betos-logo.png", "beto's-logo.png")
