@@ -56,8 +56,16 @@ DRINKS = [
 ]
 
 FLAUTAS_ITEMS = [
-    ("Flauta de carne", 45, "Crujiente, sabrosa y hecha con orgullo"),
-    ("Flauta de papa", 40, "Dorada al momento"),
+    (
+        "Orden de 4 flautas de carne",
+        45,
+        "4 piezas • lechuga • tomate • limón • guacamole • crema y salsa",
+    ),
+    (
+        "Orden de 4 flautas de papa",
+        40,
+        "4 piezas • lechuga • tomate • limón • guacamole • crema y salsa",
+    ),
     ("Cueritos", 10, ""),
     ("Guacamole extra", 10, ""),
     ("Salsa extra", 10, ""),
