@@ -77,28 +77,30 @@ ASADA_PACKAGES = [
         (
             "Paquete 1 · Chuleta de res",
             600,
-            "1 kg de chuleta, 2 papas asadas sazonadas, 2 quesadillas, "
-            "2 cebollas sazonadas, 2 chiles chilaca con queso, 2 salchichas, "
-            "tortillas, salsa roja, guacamole y soda de 2 litros",
+            "1 kg de chuleta de res • 2 salchichas • 2 papas asadas con mantequilla • "
+            "2 cebollas sazonadas • 2 quesadillas • 2 chiles chilaca con queso • "
+            "1 soda de 2 litros • tortillas, guacamole y salsa",
         ),
         (
             "Paquete 2 · Chuleta de res",
             350,
-            "½ kg de chuleta, 1 papa con mantequilla, 1 cebolla sazonada, "
-            "1 salchicha, 1 quesadilla, 1 chile chilaca y soda de lata",
+            "½ kg de chuleta de res • 1 salchicha • 1 papa asada con mantequilla • "
+            "1 cebolla sazonada • 1 quesadilla • 1 chile chilaca con queso • "
+            "2 sodas de lata de 355 ml • tortillas, guacamole y salsa",
         ),
         (
             "Paquete 3 · Costillas",
             500,
-            "1 kg de costillas, 2 papas asadas sazonadas, 2 quesadillas, "
-            "2 cebollas sazonadas, 2 chiles chilaca con queso, 2 salchichas, "
-            "tortillas, salsa roja, guacamole y soda de 2 litros",
+            "1 kg de costilla de res • 2 salchichas • 2 papas asadas con mantequilla • "
+            "2 cebollas sazonadas • 2 quesadillas • 2 chiles chilaca con queso • "
+            "1 soda de 2 litros • tortillas, guacamole y salsa",
         ),
         (
             "Paquete 4 · Costillas",
             300,
-            "½ kg de costillas, 1 papa con mantequilla, 1 cebolla sazonada, "
-            "1 salchicha, 1 quesadilla, 1 chile chilaca y soda de lata",
+            "½ kg de costilla de res • 1 salchicha • 1 papa asada con mantequilla • "
+            "1 cebolla sazonada • 1 quesadilla • 1 chile chilaca con queso • "
+            "2 sodas de lata de 355 ml • tortillas, guacamole y salsa",
         ),
 ]
 
@@ -220,6 +222,11 @@ div.stButton>button{min-height:58px;border-radius:9px;font-weight:900;font-size:
 [data-testid="stRadio"] label{background:#fff7e7;color:var(--ink);border:2px solid #d7c39e;border-radius:10px;padding:.8rem 1.15rem;min-width:190px;font-weight:800;box-shadow:0 3px 0 rgba(49,34,18,.08)}
 [data-testid="stRadio"] label:has(input:checked){border-color:var(--red);background:#fff0e5;color:var(--red);box-shadow:0 0 0 3px rgba(152,27,22,.1)}
 [data-testid="stSelectbox"]>div>div{background:#fff0cf;border-color:#c48421;color:#681b16;font-weight:800}
+[data-testid="stSelectbox"] svg{width:34px!important;height:34px!important;padding:7px;background:var(--red);color:#fff;border-radius:50%;stroke-width:3;filter:drop-shadow(0 2px 1px rgba(0,0,0,.16))}
+.select-hint{margin:.15rem 0 .45rem;padding:.65rem .8rem;border-radius:8px;background:#981b16;color:#fff;font-weight:900;font-size:.92rem;text-align:center}
+.product-description{margin:.8rem 0 1rem;padding:1rem 1.1rem;border-left:6px solid var(--red);border-radius:9px;background:#f0dfbb;color:#332217;box-shadow:0 4px 12px rgba(60,35,12,.10)}
+.product-description strong{display:block;margin-bottom:.35rem;color:var(--red);font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em}
+.product-description p{margin:0;color:#332217;font-size:1.03rem;font-weight:700;line-height:1.65}
 div[data-baseweb="popover"] [role="listbox"],div[data-baseweb="popover"] ul{background:var(--red)!important;padding:.45rem!important}
 div[data-baseweb="popover"] [role="option"],div[data-baseweb="popover"] li{background:var(--red)!important;color:#fff!important;font-weight:800;border-radius:7px;margin:.15rem 0}
 div[data-baseweb="popover"] [role="option"] *,div[data-baseweb="popover"] li *{color:#fff!important}
@@ -387,14 +394,21 @@ with menu_right:
     )
     group_products = PRODUCT_GROUPS[category][selected_group]
     product_names = [product[0] for product in group_products]
+    st.markdown(
+        '<div class="select-hint">▼ Toca aquí para elegir una opción ▼</div>',
+        unsafe_allow_html=True,
+    )
     selected_product_name = st.selectbox(
-        "Producto",
+        "Elige un producto o paquete",
         product_names,
         key=f"product-{category}-{selected_group}",
     )
     product_price, product_description = PRODUCT_CATALOG[selected_product_name]
     if product_description:
-        st.caption(product_description)
+        st.markdown(
+            f'<div class="product-description"><strong>Incluye</strong><p>{product_description}</p></div>',
+            unsafe_allow_html=True,
+        )
     st.markdown(f"### ${product_price:,}")
     add_left, add_right = st.columns([1, 2])
     add_quantity = add_left.number_input(
